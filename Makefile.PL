@@ -17,9 +17,10 @@ my %WriteMakefileArgs = (
   "MIN_PERL_VERSION" => "5.010",
   "NAME" => "Plack::App::Dir",
   "PREREQ_PM" => {
-    "Moo" => 0,
+    "Carp" => 0,
     "Path::Tiny" => 0,
-    "Types::Standard" => 0,
+    "Plack::Component" => 0,
+    "parent" => 0,
     "strict" => 0,
     "warnings" => 0
   },
@@ -36,12 +37,13 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "Carp" => 0,
   "HTTP::Request::Common" => 0,
-  "Moo" => 0,
   "Path::Tiny" => 0,
+  "Plack::Component" => 0,
   "Plack::Test" => 0,
   "Test::More" => 0,
-  "Types::Standard" => 0,
+  "parent" => 0,
   "strict" => 0,
   "warnings" => 0
 );

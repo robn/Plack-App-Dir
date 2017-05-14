@@ -6,39 +6,40 @@ use 5.010;
 use warnings;
 use strict;
 
-use Moo;
-use Types::Standard qw(Str);
+use parent 'Plack::Component';
+
+use Carp qw(croak);
 use Path::Tiny;
 
-has dir => ( is => 'ro', isa => Str, required => 1 );
+sub new {
+  my $self = shift->SUPER::new(@_);
+  croak "Required constructor arg 'dir' not found" unless $self->{dir};
+  $self;
+}
 
-sub to_app {
-  my ($self) = @_;
+sub call {
+  my ($self, $env) = @_;
 
   state $apps = {};
 
-  return sub {
-    my ($env) = @_;
-    
-    my ($app_name, $req_uri) = $env->{REQUEST_URI} =~ m{^/([^\/]+)(.*)$};
-    $req_uri ||= '/';
+  my ($app_name, $req_uri) = $env->{REQUEST_URI} =~ m{^/([^\/]+)(.*)$};
+  $req_uri ||= '/';
 
-    my $app = do {
-      my $app_path = path($self->dir, "$app_name.psgi");
+  my $app = do {
+    my $app_path = path($self->{dir}, "$app_name.psgi");
 
-      $apps->{$app_name} ||= do {
-        if ($app_path->is_file) {
-          do $app_path;
-        }
-        else {
-          sub { [ 404, [], [] ] };
-        }
+    $apps->{$app_name} ||= do {
+      if ($app_path->is_file) {
+        do $app_path;
       }
-    };
-
-    $env->{REQUEST_URI} = $req_uri;
-    $app->($env);
+      else {
+        sub { [ 404, [], [] ] };
+      }
+    }
   };
+
+  $env->{REQUEST_URI} = $req_uri;
+  $app->($env);
 }
 
 1;
