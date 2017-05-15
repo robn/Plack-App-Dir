@@ -20,9 +20,9 @@ through a single server with some sort of router or even [Plack::Builder](https:
 hook them all up.
 
 Instead, use [Plack::App::Dir](https://metacpan.org/pod/Plack::App::Dir). Point it at a directory full of `.psgi`
-files. It will give you a single PSGI app back. When you request some endpoint,
-like `/foo`, it will try to load `foo.psgi` and if that works, pass the
-request on to it.
+files. It will give you a single PSGI app back, with all the PSGI files in that
+dir mounted by their name, such that when you request an endpoint like `/foo`,
+`foo.psgi` will be called.
 
 # SUPPORT
 

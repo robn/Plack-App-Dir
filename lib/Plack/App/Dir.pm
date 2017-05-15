@@ -8,39 +8,34 @@ use strict;
 
 use parent 'Plack::Component';
 
-use Carp qw(croak);
+use Moo;
+use Types::Standard qw(Str);
+use Type::Utils qw(class_type);
+
 use Path::Tiny;
+use Carp qw(croak);
+use Plack::App::URLMap;
 
-sub new {
-  my $self = shift->SUPER::new(@_);
-  croak "Required constructor arg 'dir' not found" unless $self->{dir};
-  $self;
+has dir     => ( is => 'ro',   isa => Str, required => 1 );
+has _urlmap => ( is => 'lazy', isa => class_type('Plack::App::URLMap'),
+                 default => sub { Plack::App::URLMap->new } );
+
+sub BUILD {
+  my ($self, $args) = @_;
+
+  my $path = path($self->dir);
+  croak "dir '$path' doesn't exist" unless $path->is_dir;
+
+  for my $app_path ($path->children(qr/\.psgi$/)) {
+    my $app_name = $app_path->basename('.psgi');
+    $self->_urlmap->map("/$app_name" => do $app_path);
+  }
 }
 
-sub call {
-  my ($self, $env) = @_;
-
-  state $apps = {};
-
-  my ($app_name, $req_uri) = $env->{REQUEST_URI} =~ m{^/([^\/]+)(.*)$};
-  $req_uri ||= '/';
-
-  my $app = do {
-    my $app_path = path($self->{dir}, "$app_name.psgi");
-
-    $apps->{$app_name} ||= do {
-      if ($app_path->is_file) {
-        do $app_path;
-      }
-      else {
-        sub { [ 404, [], [] ] };
-      }
-    }
-  };
-
-  $env->{REQUEST_URI} = $req_uri;
-  $app->($env);
-}
+# crappy delegation
+sub prepare_map { shift->_urlmap->prepare_map(@_) }
+sub to_app      { shift->_urlmap->to_app(@_) }
+sub response_cb { shift->_urlmap->response_cb(@_) }
 
 1;
 
@@ -72,9 +67,9 @@ through a single server with some sort of router or even L<Plack::Builder> to
 hook them all up.
 
 Instead, use L<Plack::App::Dir>. Point it at a directory full of C<.psgi>
-files. It will give you a single PSGI app back. When you request some endpoint,
-like C</foo>, it will try to load C<foo.psgi> and if that works, pass the
-request on to it.
+files. It will give you a single PSGI app back, with all the PSGI files in that
+dir mounted by their name, such that when you request an endpoint like C</foo>,
+C<foo.psgi> will be called.
 
 =head1 SUPPORT
 
