@@ -31,6 +31,7 @@ my %WriteMakefileArgs = (
   "TEST_REQUIRES" => {
     "HTTP::Request::Common" => 0,
     "Plack::Test" => 0,
+    "Test::Exception" => 0,
     "Test::More" => 0
   },
   "VERSION" => "0.001",
@@ -48,6 +49,7 @@ my %FallbackPrereqs = (
   "Plack::App::URLMap" => 0,
   "Plack::Component" => 0,
   "Plack::Test" => 0,
+  "Test::Exception" => 0,
   "Test::More" => 0,
   "Type::Utils" => 0,
   "Types::Standard" => 0,

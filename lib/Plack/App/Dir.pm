@@ -28,7 +28,9 @@ sub BUILD {
 
   for my $app_path ($path->children(qr/\.psgi$/)) {
     my $app_name = $app_path->basename('.psgi');
-    $self->_urlmap->map("/$app_name" => do $app_path);
+    my $app = do $app_path;
+    die $@ if $@;
+    $self->_urlmap->map("/$app_name" => $app);
   }
 }
 
